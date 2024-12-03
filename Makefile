@@ -1,5 +1,6 @@
 $(shell mkdir -p builds/macos builds/linux builds/windows)
 
+VERSION=$(shell git describe --abbrev=0 --tags)
 LDFLAGS=-ldflags "-s -w"
 
 all: linux macos windows
@@ -13,7 +14,10 @@ macos:
 windows:
 	GOOS=windows GOARCH=amd64 go build -trimpath -buildmode=pie $(LDFLAGS) -o builds/windows/cve2json.exe
 
+zip:
+	cd builds && zip -9 -r cve2json-$(VERSION).zip linux macos windows
+
 clean:
 	rm -rf builds/*
 
-.PHONY: all clean linux macos windows
+.PHONY: all clean linux macos windows zip
