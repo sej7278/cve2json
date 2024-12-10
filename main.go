@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"sort"
 )
 
@@ -36,10 +37,7 @@ func fetchCSV(url string) ([]map[string]string, error) {
 	for _, record := range records[1:] {
 		result := make(map[string]string)
 		for i, value := range record {
-			// ignore status field as its always released due to our search query
-			if headers[i] != "Status" {
-				result[headers[i]] = value
-			}
+			result[headers[i]] = value
 		}
 		results = append(results, result)
 	}
@@ -48,15 +46,27 @@ func fetchCSV(url string) ([]map[string]string, error) {
 }
 
 func main() {
+	// default to only Release status
+	esu_url := "https://cve.tuxcare.com/els/download-csv?os=250b68a8-d847-467a-b1a2-51c1917f1164&status=4761a92a-acb2-412a-aa23-0e86510efa78&orderBy=cve-asc"
+	fips_url := "https://cve.tuxcare.com/els/download-csv?os=e89ddb3c-c0b3-454f-8257-ee6d6505f1b8&status=4761a92a-acb2-412a-aa23-0e86510efa78&orderBy=cve-asc"
+
+	// include all statuses if called with all argument
+	if len(os.Args) > 1 {
+		if os.Args[1] == "all" || os.Args[1] == "--all" {
+			esu_url = "https://cve.tuxcare.com/els/download-csv?os=250b68a8-d847-467a-b1a2-51c1917f1164&&orderBy=cve-asc"
+			fips_url = "https://cve.tuxcare.com/els/download-csv?os=e89ddb3c-c0b3-454f-8257-ee6d6505f1b8&orderBy=cve-asc"
+		}
+	}
+
 	// fetch esu file
-	esu, err := fetchCSV("https://cve.tuxcare.com/els/download-csv?os=250b68a8-d847-467a-b1a2-51c1917f1164&status=4761a92a-acb2-412a-aa23-0e86510efa78&orderBy=cve-asc")
+	esu, err := fetchCSV(esu_url)
 	if err != nil {
 		fmt.Println("Error fetching ESU CSV:", err)
 		return
 	}
 
 	// fetch fips file
-	fips, err := fetchCSV("https://cve.tuxcare.com/els/download-csv?os=e89ddb3c-c0b3-454f-8257-ee6d6505f1b8&status=4761a92a-acb2-412a-aa23-0e86510efa78&orderBy=cve-asc")
+	fips, err := fetchCSV(fips_url)
 	if err != nil {
 		fmt.Println("Error fetching FIPS CSV:", err)
 		return
